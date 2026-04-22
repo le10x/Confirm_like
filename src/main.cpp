@@ -1,79 +1,35 @@
 #include <Geode/Geode.hpp>
-#include <Geode/modify/LikeItemLayer.hpp>
+#include <Geode/modify/InfoLayer.hpp>
 
 using namespace geode::prelude;
 
-class $modify(LikeItemLayerHook, LikeItemLayer) {
-    struct Fields {
-        bool m_isProcessing = false; // Cambiado a un nombre más genérico para evitar conflictos
-    };
-
-    static void onModify(auto& self) {
-        // En 2.2081, asegúrate de usar los nombres correctos de las funciones del SDK
-        (void)self.setHookPriority("LikeItemLayer::onLike", Priority::First);
-        (void)self.setHookPriority("LikeItemLayer::onDislike", Priority::First);
-    }
-
+// Modificamos la clase InfoLayer para interceptar el botón de Like
+class $modify(MyInfoLayer, InfoLayer) {
+    
+    // Sobrescribimos la función que se ejecuta al presionar Like
+    // Nota: El nombre de la función puede variar según los headers (onLike es común)
     void onLike(CCObject* sender) {
-        // Si el mod está desactivado en settings o ya estamos procesando el click, ejecutar normal
-        if (!Mod::get()->getSettingValue<bool>("like") || m_fields->m_isProcessing) {
-            m_fields->m_isProcessing = false;
-            LikeItemLayer::onLike(sender);
-            return;
-        }
-
-        m_fields->m_isProcessing = true;
-        
-        // Usamos una referencia al sender para el callback
-        geode::createQuickPopup(
-            "Confirm Like", 
-            "Are you sure you want to like this " + getItemType() + "? You cannot undo this.", 
-            "Cancel", "Ok",
-            [this, sender](auto, bool confirmed) {
-                if (confirmed) {
-                    this->onLike(sender);
-                } else {
-                    m_fields->m_isProcessing = false;
-                    if (Mod::get()->getSettingValue<bool>("close")) {
-                        this->onClose(sender);
-                    }
-                }
-            }
+        // Creamos una alerta de confirmación
+        auto alert = FLAlertLayer::create(
+            "Confirmar", 
+            "¿Estás seguro de que quieres dar <cg>Like</c> a este nivel?", 
+            "Cancelar", 
+            "Aceptar"
         );
+        
+        // Configuramos el "Target" para que, al presionar "Aceptar", se llame a la función original
+        alert->setTargetLayer(this);
+        // El tag ayuda a identificar la acción en el callback
+        alert->setTag(69); 
+        alert->show();
     }
 
-    void onDislike(CCObject* sender) {
-        if (!Mod::get()->getSettingValue<bool>("dislike") || m_fields->m_isProcessing) {
-            m_fields->m_isProcessing = false;
-            LikeItemLayer::onDislike(sender);
-            return;
-        }
-
-        m_fields->m_isProcessing = true;
-        
-        geode::createQuickPopup(
-            "Confirm Dislike", 
-            "Are you sure you want to dislike this " + getItemType() + "? You cannot undo this.", 
-            "Cancel", "Ok",
-            [this, sender](auto, bool confirmed) {
-                if (confirmed) {
-                    this->onDislike(sender);
-                } else {
-                    m_fields->m_isProcessing = false;
-                    if (Mod::get()->getSettingValue<bool>("close")) {
-                        this->onClose(sender);
-                    }
-                }
-            }
-        );
-    }
-
-    std::string getItemType() {
-        // m_itemType sigue funcionando igual en la 2.2081
-        switch(m_itemType) {
-            case LikeItemType::Level: return "level";
-            case LikeItemType::LevelList: return "list";
-            default: return "comment";
+    // Callback que recibe la respuesta del FLAlertLayer
+    void FLAlert_Clicked(FLAlertLayer* alert, bool btn2) {
+        // btn2 es true si se presionó el botón de la derecha ("Aceptar")
+        if (btn2 && alert->getTag() == 69) {
+            // Llamamos a la función original de la clase base
+            InfoLayer::onLike(nullptr);
         }
     }
 };
