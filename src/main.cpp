@@ -3,58 +3,77 @@
 
 using namespace geode::prelude;
 
-// the code for this mod is really dumb but it works so idc
 class $modify(LikeItemLayerHook, LikeItemLayer) {
     struct Fields {
-        bool likePopup = false;
-        bool dislikePopup = false;
+        bool m_isProcessing = false; // Cambiado a un nombre más genérico para evitar conflictos
     };
 
-    // this is prolly correct i think (beforepre gives errors and geode docs r down so :pray:)
     static void onModify(auto& self) {
-        (void)self.setHookPriorityPre("LikeItemLayer::onLike", Priority::First);
-        (void)self.setHookPriorityPre("LikeItemLayer::onDislike", Priority::First);
-    };
+        // En 2.2081, asegúrate de usar los nombres correctos de las funciones del SDK
+        (void)self.setHookPriority("LikeItemLayer::onLike", Priority::First);
+        (void)self.setHookPriority("LikeItemLayer::onDislike", Priority::First);
+    }
 
     void onLike(CCObject* sender) {
-        if (!Mod::get()->getSettingValue<bool>("like") || m_fields->likePopup) {
-            m_fields->likePopup = false;
-            // we so silly :3
-            return LikeItemLayer::onLike(sender);
+        // Si el mod está desactivado en settings o ya estamos procesando el click, ejecutar normal
+        if (!Mod::get()->getSettingValue<bool>("like") || m_fields->m_isProcessing) {
+            m_fields->m_isProcessing = false;
+            LikeItemLayer::onLike(sender);
+            return;
         }
 
-        m_fields->likePopup = true;
+        m_fields->m_isProcessing = true;
+        
+        // Usamos una referencia al sender para el callback
         geode::createQuickPopup(
             "Confirm Like", 
             "Are you sure you want to like this " + getItemType() + "? You cannot undo this.", 
             "Cancel", "Ok",
-            [&] (auto, bool btn2) {
-                if (btn2) LikeItemLayer::onLike(sender);
-                else if (Mod::get()->getSettingValue<bool>("close")) onClose(sender);
+            [this, sender](auto, bool confirmed) {
+                if (confirmed) {
+                    this->onLike(sender);
+                } else {
+                    m_fields->m_isProcessing = false;
+                    if (Mod::get()->getSettingValue<bool>("close")) {
+                        this->onClose(sender);
+                    }
+                }
             }
         );
     }
+
     void onDislike(CCObject* sender) {
-        if (!Mod::get()->getSettingValue<bool>("dislike") || m_fields->dislikePopup) {
-            m_fields->dislikePopup = false;
-            return LikeItemLayer::onDislike(sender);
+        if (!Mod::get()->getSettingValue<bool>("dislike") || m_fields->m_isProcessing) {
+            m_fields->m_isProcessing = false;
+            LikeItemLayer::onDislike(sender);
+            return;
         }
 
-        m_fields->dislikePopup = true;
+        m_fields->m_isProcessing = true;
+        
         geode::createQuickPopup(
             "Confirm Dislike", 
             "Are you sure you want to dislike this " + getItemType() + "? You cannot undo this.", 
             "Cancel", "Ok",
-            [&] (auto, bool btn2) {
-                if (btn2) LikeItemLayer::onDislike(sender);
-                else if (Mod::get()->getSettingValue<bool>("close")) onClose(sender);
+            [this, sender](auto, bool confirmed) {
+                if (confirmed) {
+                    this->onDislike(sender);
+                } else {
+                    m_fields->m_isProcessing = false;
+                    if (Mod::get()->getSettingValue<bool>("close")) {
+                        this->onClose(sender);
+                    }
+                }
             }
         );
     }
 
     std::string getItemType() {
-        return m_itemType == LikeItemType::Level 
-            ? "level" : m_itemType == LikeItemType::LevelList 
-                ? "list" : "comment";
+        // m_itemType sigue funcionando igual en la 2.2081
+        switch(m_itemType) {
+            case LikeItemType::Level: return "level";
+            case LikeItemType::LevelList: return "list";
+            default: return "comment";
+        }
     }
 };
