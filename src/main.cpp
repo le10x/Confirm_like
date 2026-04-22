@@ -3,33 +3,48 @@
 
 using namespace geode::prelude;
 
-// Modificamos la clase InfoLayer para interceptar el botón de Like
 class $modify(MyInfoLayer, InfoLayer) {
-    
-    // Sobrescribimos la función que se ejecuta al presionar Like
-    // Nota: El nombre de la función puede variar según los headers (onLike es común)
     void onLike(CCObject* sender) {
-        // Creamos una alerta de confirmación
-        auto alert = FLAlertLayer::create(
-            "Confirmar", 
-            "¿Estás seguro de que quieres dar <cg>Like</c> a este nivel?", 
-            "Cancelar", 
-            "Aceptar"
-        );
-        
-        // Configuramos el "Target" para que, al presionar "Aceptar", se llame a la función original
-        alert->setTargetLayer(this);
-        // El tag ayuda a identificar la acción en el callback
-        alert->setTag(69); 
-        alert->show();
+        // Obtenemos el tag: 1 para Like, 0 para Dislike
+        int tag = sender->getTag();
+        bool isLike = (tag == 1);
+
+        // Leemos la configuración
+        bool shouldConfirmLike = Mod::get()->getSettingValue<bool>("confirm-like");
+        bool shouldConfirmDislike = Mod::get()->getSettingValue<bool>("confirm-dislike");
+
+        // Verificamos si la configuración pide confirmación para esta acción
+        if ((isLike && shouldConfirmLike) || (!isLike && shouldConfirmDislike)) {
+            
+            // Obtenemos el nombre del nivel desde la variable interna de InfoLayer
+            std::string levelName = m_level->m_levelName;
+            
+            // Construimos el mensaje dinámico
+            std::string accion = isLike ? "dar <cg>Like</c>" : "dar <cr>Dislike</c>";
+            std::string mensaje = "¿Estás seguro de que quieres " + accion + " a <cy>" + levelName + "</c>?";
+
+            auto alert = FLAlertLayer::create(
+                "Confirmar Voto", 
+                mensaje, 
+                "Cancelar", 
+                "Aceptar"
+            );
+            
+            alert->setTargetLayer(this);
+            alert->setTag(tag); // Guardamos el tipo de voto para el callback
+            alert->show();
+        } else {
+            // Si la opción está desactivada, votar directamente
+            InfoLayer::onLike(sender);
+        }
     }
 
-    // Callback que recibe la respuesta del FLAlertLayer
     void FLAlert_Clicked(FLAlertLayer* alert, bool btn2) {
-        // btn2 es true si se presionó el botón de la derecha ("Aceptar")
-        if (btn2 && alert->getTag() == 69) {
-            // Llamamos a la función original de la clase base
-            InfoLayer::onLike(nullptr);
+        if (btn2) {
+            // Creamos un CCNode temporal con el tag correcto para pasárselo a la función original
+            auto dummy = CCNode::create();
+            dummy->setTag(alert->getTag());
+            InfoLayer::onLike(dummy);
         }
     }
 };
