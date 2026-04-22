@@ -6,33 +6,22 @@
 		"mac": "2.2081",
 		"ios": "2.2081"
 	},
-	"id": "nwo5.confirm_like",
-	"name": "Confirm Like",
-	"version": "v1.1.1",
-	"developer": "Nwo5",
-	"description": "confirm like or dislike",
-	"tags": ["enhancement", "offline"],
-	"links": {
-		"source": "https://github.com/Nwo5-trg/Confirm-Like",
-		"community": "https://discord.gg/AeFeYWGUxZ"
-	},
-	"dependencies": {
-		"geode.node-ids": ">=1.21.1"
-	},
+	"id": "le10x.like_confirm",
+	"name": "Like Confirm",
+	"version": "1.0.0",
+	"developer": "le10x",
+	"description": "Añade una ventana de confirmación al dar Like o Dislike a un nivel para evitar votos accidentales.",
 	"settings": {
-		"close": {
+		"confirm-like": {
+			"name": "Confirmar Like",
+			"description": "¿Pedir confirmación al dar Like?",
 			"type": "bool",
-			"name": "Close On Cancel",
 			"default": true
 		},
-		"like": {
+		"confirm-dislike": {
+			"name": "Confirmar Dislike",
+			"description": "¿Pedir confirmación al dar Dislike?",
 			"type": "bool",
-			"name": "Enable Like Popup",
-			"default": true
-		},
-		"dislike": {
-			"type": "bool",
-			"name": "Enable Disike Popup",
 			"default": true
 		}
 	}
