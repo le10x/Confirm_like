@@ -4,47 +4,42 @@
 using namespace geode::prelude;
 
 class $modify(MyInfoLayer, InfoLayer) {
-    void onLike(CCObject* sender) {
-        // Obtenemos el tag: 1 para Like, 0 para Dislike
+    // En 2.2081, el nombre correcto suele ser onLikeItem
+    void onLikeItem(CCObject* sender) {
         int tag = sender->getTag();
         bool isLike = (tag == 1);
 
-        // Leemos la configuración
         bool shouldConfirmLike = Mod::get()->getSettingValue<bool>("confirm-like");
         bool shouldConfirmDislike = Mod::get()->getSettingValue<bool>("confirm-dislike");
 
-        // Verificamos si la configuración pide confirmación para esta acción
         if ((isLike && shouldConfirmLike) || (!isLike && shouldConfirmDislike)) {
-            
-            // Obtenemos el nombre del nivel desde la variable interna de InfoLayer
             std::string levelName = m_level->m_levelName;
-            
-            // Construimos el mensaje dinámico
             std::string accion = isLike ? "dar <cg>Like</c>" : "dar <cr>Dislike</c>";
-            std::string mensaje = "¿Estás seguro de que quieres " + accion + " a <cy>" + levelName + "</c>?";
+            std::string mensaje = "¿Seguro que quieres " + accion + " a <cy>" + levelName + "</c>?";
 
+            // CORRECCIÓN: Se requiere pasar 'this' como primer argumento (delegate)
             auto alert = FLAlertLayer::create(
-                "Confirmar Voto", 
+                this, 
+                "Confirmar", 
                 mensaje, 
-                "Cancelar", 
-                "Aceptar"
+                "No", 
+                "Sí"
             );
             
-            alert->setTargetLayer(this);
-            alert->setTag(tag); // Guardamos el tipo de voto para el callback
+            alert->setTag(tag);
             alert->show();
         } else {
-            // Si la opción está desactivada, votar directamente
-            InfoLayer::onLike(sender);
+            // Llamada original corregida
+            InfoLayer::onLikeItem(sender);
         }
     }
 
+    // El delegate ahora funciona correctamente porque pasamos 'this' arriba
     void FLAlert_Clicked(FLAlertLayer* alert, bool btn2) {
         if (btn2) {
-            // Creamos un CCNode temporal con el tag correcto para pasárselo a la función original
             auto dummy = CCNode::create();
             dummy->setTag(alert->getTag());
-            InfoLayer::onLike(dummy);
+            InfoLayer::onLikeItem(dummy);
         }
     }
 };
