@@ -4,59 +4,64 @@
 
 using namespace geode::prelude;
 
-// --- SECCIÓN DE LIKES ---
+// Hook para Likes y Dislikes
 class $modify(MyLikeItemLayer, LikeItemLayer) {
-    static inline bool s_isExecuting = false;
+    struct Fields {
+        bool m_isConfirming = false;
+    };
 
     void onLike(CCObject* sender) {
-        if (s_isExecuting || !Mod::get()->getSettingValue<bool>("confirm-like")) {
+        if (m_fields->m_isConfirming || !Mod::get()->getSettingValue<bool>("confirm-like")) {
+            m_fields->m_isConfirming = false;
             return LikeItemLayer::onLike(sender);
         }
 
+        m_fields->m_isConfirming = true;
         geode::createQuickPopup(
             "Confirm", 
             "Are you sure you want to like?", 
             "Cancel", "Yes",
             [this, sender](auto, bool btn2) {
                 if (btn2) {
-                    s_isExecuting = true;
                     this->onLike(sender);
-                    s_isExecuting = false;
+                } else {
+                    m_fields->m_isConfirming = false;
                 }
             }
         );
     }
 
     void onDislike(CCObject* sender) {
-        if (s_isExecuting || !Mod::get()->getSettingValue<bool>("confirm-dislike")) {
+        if (m_fields->m_isConfirming || !Mod::get()->getSettingValue<bool>("confirm-dislike")) {
+            m_fields->m_isConfirming = false;
             return LikeItemLayer::onDislike(sender);
         }
 
+        m_fields->m_isConfirming = true;
         geode::createQuickPopup(
             "Confirm", 
             "Are you sure you want to dislike?", 
             "Cancel", "Yes",
             [this, sender](auto, bool btn2) {
                 if (btn2) {
-                    s_isExecuting = true;
                     this->onDislike(sender);
-                    s_isExecuting = false;
+                } else {
+                    m_fields->m_isConfirming = false;
                 }
             }
         );
     }
 };
 
-// --- SECCIÓN PARA QUITAR CONFIRMACIÓN VANILLA DE COMENTARIOS ---
+// Hook para borrar comentarios instantáneamente
 class $modify(MyCommentCell, CommentCell) {
-    void onDeleteComment(CCObject* sender) {
-        // Si la opción de "Quick Delete" está activada
+    void onDelete(CCObject* sender) {
         if (Mod::get()->getSettingValue<bool>("no-confirm-delete")) {
-            // Llamamos directamente al callback de borrar sin pasar por el popup de GD
+            // Saltamos la confirmación llamando al callback final directamente
             this->FLAlert_Clicked(nullptr, true);
         } else {
-            // Comportamiento normal del juego
-            CommentCell::onDeleteComment(sender);
+            // Usamos el nombre correcto para la llamada original
+            CommentCell::onDelete(sender);
         }
     }
 };
