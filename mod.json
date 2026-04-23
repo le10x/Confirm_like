@@ -10,23 +10,21 @@
 	"name": "Like Confirm",
 	"version": "1.0.0",
 	"developer": "le10x",
-	"description": "Adds a confirmation window when Liking, Disliking or deleting items to avoid accidental actions.",
+	"description": "Confirm Likes/Dislikes and remove vanilla comment deletion confirmation.",
 	"settings": {
 		"confirm-like": {
 			"name": "Confirm Like",
-			"description": "Ask for confirmation before Liking an item.",
 			"type": "bool",
 			"default": true
 		},
 		"confirm-dislike": {
 			"name": "Confirm Dislike",
-			"description": "Ask for confirmation before Disliking an item.",
 			"type": "bool",
 			"default": true
 		},
-		"confirm-comment-delete": {
-			"name": "Confirm Comment Delete",
-			"description": "Ask for confirmation before deleting a comment.",
+		"no-confirm-delete": {
+			"name": "Quick Delete",
+			"description": "If enabled, your comments will be deleted instantly without vanilla confirmation.",
 			"type": "bool",
 			"default": false
 		}
