@@ -10,19 +10,25 @@
 	"name": "Like Confirm",
 	"version": "1.0.0",
 	"developer": "le10x",
-	"description": "Añade una ventana de confirmación al dar Like o Dislike a un nivel para evitar votos accidentales.",
+	"description": "Adds a confirmation window when Liking, Disliking or deleting items to avoid accidental actions.",
 	"settings": {
 		"confirm-like": {
-			"name": "Confirmar Like",
-			"description": "¿Pedir confirmación al dar Like?",
+			"name": "Confirm Like",
+			"description": "Ask for confirmation before Liking an item.",
 			"type": "bool",
 			"default": true
 		},
 		"confirm-dislike": {
-			"name": "Confirmar Dislike",
-			"description": "¿Pedir confirmación al dar Dislike?",
+			"name": "Confirm Dislike",
+			"description": "Ask for confirmation before Disliking an item.",
 			"type": "bool",
 			"default": true
+		},
+		"confirm-comment-delete": {
+			"name": "Confirm Comment Delete",
+			"description": "Ask for confirmation before deleting a comment.",
+			"type": "bool",
+			"default": false
 		}
 	}
 }
