@@ -1,17 +1,15 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/LikeItemLayer.hpp>
+#include <Geode/modify/CommentCell.hpp>
 
 using namespace geode::prelude;
 
+// --- SECCIÓN DE LIKES ---
 class $modify(MyLikeItemLayer, LikeItemLayer) {
-    // Usamos una variable estática temporal para evitar bucles sin depender de Fields complejos
     static inline bool s_isExecuting = false;
 
     void onLike(CCObject* sender) {
-        bool shouldConfirm = Mod::get()->getSettingValue<bool>("confirm-like");
-
-        // Si ya estamos ejecutando o el usuario no quiere confirmación
-        if (s_isExecuting || !shouldConfirm) {
+        if (s_isExecuting || !Mod::get()->getSettingValue<bool>("confirm-like")) {
             return LikeItemLayer::onLike(sender);
         }
 
@@ -22,7 +20,7 @@ class $modify(MyLikeItemLayer, LikeItemLayer) {
             [this, sender](auto, bool btn2) {
                 if (btn2) {
                     s_isExecuting = true;
-                    LikeItemLayer::onLike(sender);
+                    this->onLike(sender);
                     s_isExecuting = false;
                 }
             }
@@ -30,9 +28,7 @@ class $modify(MyLikeItemLayer, LikeItemLayer) {
     }
 
     void onDislike(CCObject* sender) {
-        bool shouldConfirm = Mod::get()->getSettingValue<bool>("confirm-dislike");
-
-        if (s_isExecuting || !shouldConfirm) {
+        if (s_isExecuting || !Mod::get()->getSettingValue<bool>("confirm-dislike")) {
             return LikeItemLayer::onDislike(sender);
         }
 
@@ -43,33 +39,24 @@ class $modify(MyLikeItemLayer, LikeItemLayer) {
             [this, sender](auto, bool btn2) {
                 if (btn2) {
                     s_isExecuting = true;
-                    LikeItemLayer::onDislike(sender);
+                    this->onDislike(sender);
                     s_isExecuting = false;
                 }
             }
         );
     }
+};
 
-    // Nota: Para borrar comentarios se suele usar onDelete en otras clases, 
-    // pero si LikeItemLayer gestiona alguna eliminación, se intercepta así:
-    void onDelete(CCObject* sender) {
-        bool shouldConfirm = Mod::get()->getSettingValue<bool>("confirm-comment-delete");
-
-        if (s_isExecuting || !shouldConfirm) {
-            return LikeItemLayer::onDelete(sender);
+// --- SECCIÓN PARA QUITAR CONFIRMACIÓN VANILLA DE COMENTARIOS ---
+class $modify(MyCommentCell, CommentCell) {
+    void onDeleteComment(CCObject* sender) {
+        // Si la opción de "Quick Delete" está activada
+        if (Mod::get()->getSettingValue<bool>("no-confirm-delete")) {
+            // Llamamos directamente al callback de borrar sin pasar por el popup de GD
+            this->FLAlert_Clicked(nullptr, true);
+        } else {
+            // Comportamiento normal del juego
+            CommentCell::onDeleteComment(sender);
         }
-
-        geode::createQuickPopup(
-            "Confirm", 
-            "Are you sure you want to delete this?", 
-            "Cancel", "Yes",
-            [this, sender](auto, bool btn2) {
-                if (btn2) {
-                    s_isExecuting = true;
-                    LikeItemLayer::onDelete(sender);
-                    s_isExecuting = false;
-                }
-            }
-        );
     }
 };
