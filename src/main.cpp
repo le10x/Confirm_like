@@ -1,67 +1,57 @@
 #include <Geode/Geode.hpp>
-#include <Geode/modify/LikeItemLayer.hpp>
-#include <Geode/modify/CommentCell.hpp>
+#include <Geode/modify/MenuLayer.hpp>
 
 using namespace geode::prelude;
 
-// Hook para Likes y Dislikes
-class $modify(MyLikeItemLayer, LikeItemLayer) {
-    struct Fields {
-        bool m_isConfirming = false;
-    };
-
-    void onLike(CCObject* sender) {
-        if (m_fields->m_isConfirming || !Mod::get()->getSettingValue<bool>("confirm-like")) {
-            m_fields->m_isConfirming = false;
-            return LikeItemLayer::onLike(sender);
+class $modify(MyMenuLayer, MenuLayer) {
+    void onMyCustomLevel(CCObject* sender) {
+        // 1. Leer el archivo desde los recursos del mod
+        // Geode descomprime el .geode en memoria/cache automáticamente
+        auto nivelDatos = mod::get()->getResourcesDir() / "mi_nivel.txt";
+        
+        std::string levelString;
+        if (std::filesystem::exists(nivelDatos)) {
+            levelString = file::readString(nivelDatos).unwrapOr("");
         }
 
-        m_fields->m_isConfirming = true;
-        geode::createQuickPopup(
-            "Confirm", 
-            "Are you sure you want to like?", 
-            "Cancel", "Yes",
-            [this, sender](auto, bool btn2) {
-                if (btn2) {
-                    this->onLike(sender);
-                } else {
-                    m_fields->m_isConfirming = false;
-                }
-            }
-        );
+        if (levelString.empty()) {
+            FLAlertLayer::create("Error", "No se encontró el archivo del nivel", "OK")->show();
+            return;
+        }
+
+        // 2. Crear el objeto del nivel
+        auto level = GJGameLevel::create();
+        
+        // 3. Configurar datos estéticos (Seguros, sin estrellas)
+        level->m_levelName = "Nivel Embebido";
+        level->m_levelID = 100; // ID simulada
+        level->m_creatorName = "TuNombre";
+        level->m_levelString = levelString; // Aquí va el Gzip/Base64
+        
+        // Configuración de la cara de dificultad
+        level->m_difficulty = GJDifficulty::Insane; 
+        level->m_stars = 0;           // 0 estrellas para evitar baneos
+        level->m_starsRequested = 0;
+        level->m_levelDesc = "Este nivel vive dentro del mod.";
+
+        // 4. Abrir la interfaz del nivel
+        auto scene = LevelInfoLayer::scene(level, false);
+        CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, scene));
     }
 
-    void onDislike(CCObject* sender) {
-        if (m_fields->m_isConfirming || !Mod::get()->getSettingValue<bool>("confirm-dislike")) {
-            m_fields->m_isConfirming = false;
-            return LikeItemLayer::onDislike(sender);
-        }
+    // Opcional: Añadir un botón al menú principal para probarlo
+    bool init() {
+        if (!MenuLayer::init()) return false;
 
-        m_fields->m_isConfirming = true;
-        geode::createQuickPopup(
-            "Confirm", 
-            "Are you sure you want to dislike?", 
-            "Cancel", "Yes",
-            [this, sender](auto, bool btn2) {
-                if (btn2) {
-                    this->onDislike(sender);
-                } else {
-                    m_fields->m_isConfirming = false;
-                }
-            }
+        auto menu = this->getChildByID("side-menu");
+        auto btn = CCMenuItemSpriteExtra::create(
+            GNM(CCSprite::createWithSpriteFrameName("GJ_playBtn_001.png"), 0.4f),
+            this,
+            menu_selector(MyMenuLayer::onMyCustomLevel)
         );
-    }
-};
+        menu->addChild(btn);
+        menu->updateLayout();
 
-// Hook para borrar comentarios instantáneamente
-class $modify(MyCommentCell, CommentCell) {
-    void onDelete(CCObject* sender) {
-        if (Mod::get()->getSettingValue<bool>("no-confirm-delete")) {
-            // Saltamos la confirmación llamando al callback final directamente
-            this->FLAlert_Clicked(nullptr, true);
-        } else {
-            // Usamos el nombre correcto para la llamada original
-            CommentCell::onDelete(sender);
-        }
+        return true;
     }
 };
