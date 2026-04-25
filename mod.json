@@ -6,27 +6,14 @@
 		"mac": "2.2081",
 		"ios": "2.2081"
 	},
-	"id": "le10x.like_confirm",
-	"name": "Like Confirm",
+	"id": "le10x.fakelvl",
+	"name": "Like Fakelvl",
 	"version": "1.0.0",
 	"developer": "le10x",
 	"description": "Confirm Likes/Dislikes and remove vanilla comment deletion confirmation.",
-	"settings": {
-		"confirm-like": {
-			"name": "Confirm Like",
-			"type": "bool",
-			"default": true
-		},
-		"confirm-dislike": {
-			"name": "Confirm Dislike",
-			"type": "bool",
-			"default": true
-		},
-		"no-confirm-delete": {
-			"name": "Quick Delete",
-			"description": "If enabled, your comments will be deleted instantly without vanilla confirmation.",
-			"type": "bool",
-			"default": false
-		}
-	}
+    "resources": {
+    "files": [
+        "mi_nivel.txt"
+    ]
+  }
 }
