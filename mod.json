@@ -10,10 +10,10 @@
 	"name": "Like Fakelvl",
 	"version": "1.0.0",
 	"developer": "le10x",
-	"description": "Confirm Likes/Dislikes and remove vanilla comment deletion confirmation.",
-    "resources": {
-    "files": [
-        "mi_nivel.txt"
-    ]
-  }
+	"description": "Simula un nivel online desde un archivo local embebido.",
+	"resources": {
+		"files": [
+			"mi_nivel.txt"
+		]
+	}
 }
