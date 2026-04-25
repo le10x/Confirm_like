@@ -12,22 +12,16 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(Fakelvl VERSION 1.0.0)
 
-# 1. Definir la librería del mod
 add_library(${PROJECT_NAME} SHARED
     src/main.cpp
 )
 
-# 2. Localizar el SDK de Geode
 if (NOT DEFINED ENV{GEODE_SDK})
-    message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
-else()
-    message(STATUS "Found Geode: $ENV{GEODE_SDK}")
+    message(FATAL_ERROR "Unable to find Geode SDK!")
 endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# 3. Configurar el mod
+# setup_geode_mod ya se encarga de buscar la carpeta 'resources'
+# basándose en lo que pusiste en tu mod.json
 setup_geode_mod(${PROJECT_NAME})
-
-# 4. ESTA LÍNEA ES IMPORTANTE: Empaqueta los recursos (mi_nivel.txt)
-embed_geode_resources(${PROJECT_NAME})
